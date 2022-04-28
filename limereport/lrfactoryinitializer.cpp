@@ -49,6 +49,7 @@
 #include "lrexportersfactory.h"
 #include "lrexporterintf.h"
 #include "exporters/lrpdfexporter.h"
+#include "exporters/lrimageexporter.h"
 
 void initResources(){
     Q_INIT_RESOURCE(report);
@@ -488,6 +489,10 @@ void initSerializators()
 
 LimeReport::ReportExporterInterface* createPDFExporter(ReportEnginePrivate* parent){
     return new LimeReport::PDFExporter(parent);
+}
+
+LimeReport::ReportExporterInterface* createImageExporter(ReportEnginePrivate* parent){
+    return new LimeReport::ImageExporter(parent);
 }
 
 void initExporters()

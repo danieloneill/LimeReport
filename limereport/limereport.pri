@@ -15,7 +15,6 @@ INCLUDEPATH += \
     $$REPORT_PATH/scripteditor
 
 SOURCES += \
-    $$PWD/scripteditor/lrcompletermodel.cpp \
     $$REPORT_PATH/bands/lrpageheader.cpp \
     $$REPORT_PATH/bands/lrpagefooter.cpp \
     $$REPORT_PATH/bands/lrreportheader.cpp \
@@ -31,6 +30,7 @@ SOURCES += \
     $$REPORT_PATH/scripteditor/lrscripteditor.cpp \
     $$REPORT_PATH/scripteditor/lrcodeeditor.cpp \
     $$REPORT_PATH/scripteditor/lrscripthighlighter.cpp \
+    $$REPORT_PATH/scripteditor/lrcompletermodel.cpp \
     $$REPORT_PATH/items/lrhorizontallayout.cpp \
     $$REPORT_PATH/items/editors/lritemeditorwidget.cpp \
     $$REPORT_PATH/items/editors/lrfonteditorwidget.cpp \
@@ -77,6 +77,7 @@ SOURCES += \
     $$REPORT_PATH/lrcolorindicator.cpp \
     $$REPORT_PATH/lrreporttranslation.cpp \
     $$REPORT_PATH/exporters/lrpdfexporter.cpp \
+    $$REPORT_PATH/exporters/lrimageexporter.cpp \
     $$REPORT_PATH/lraxisdata.cpp \
     $$REPORT_PATH/lrpreparedpages.cpp
 
@@ -93,8 +94,7 @@ CONFIG(svg) {
 }
 
 HEADERS += \
-    $$PWD/items/lreditableimageitemintf.h \
-    $$PWD/scripteditor/lrcompletermodel.h \
+    $$REPORT_PATH/items/lreditableimageitemintf.h \
     $$REPORT_PATH/base/lrsingleton.h \
     $$REPORT_PATH/base/lrsimpleabstractfactory.h \
     $$REPORT_PATH/base/lrattribsabstractfactory.h \
@@ -116,6 +116,7 @@ HEADERS += \
     $$REPORT_PATH/scripteditor/lrscripteditor.h \
     $$REPORT_PATH/scripteditor/lrcodeeditor.h \
     $$REPORT_PATH/scripteditor/lrscripthighlighter.h \
+    $$REPORT_PATH/scripteditor/lrcompletermodel.h \
     $$REPORT_PATH/items/editors/lritemeditorwidget.h \
     $$REPORT_PATH/items/editors/lrfonteditorwidget.h \
     $$REPORT_PATH/items/editors/lrtextalignmenteditorwidget.h \
@@ -174,6 +175,7 @@ HEADERS += \
     $$REPORT_PATH/lrexporterintf.h \
     $$REPORT_PATH/lrexportersfactory.h \	
     $$REPORT_PATH/exporters/lrpdfexporter.h \
+    $$REPORT_PATH/exporters/lrimageexporter.h \
     $$REPORT_PATH/lrpreparedpages.h \
     $$REPORT_PATH/lraxisdata.h \
     $$REPORT_PATH/lrpreparedpagesintf.h 

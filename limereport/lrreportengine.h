@@ -154,6 +154,7 @@ public:
     ~ReportEngine();
     bool    printReport(QPrinter *printer=0);
     bool    printReport(QMap<QString, QPrinter*> printers, bool printToAllPrinters = false);
+    bool    exportReportToImage(QImage *image, int resolution);
     bool    printPages(ReportPages pages, QPrinter *printer);
     void    printToFile(const QString& fileName);
     QGraphicsScene* createPreviewScene(QObject *parent = 0);

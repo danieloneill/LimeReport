@@ -130,6 +130,21 @@ private:
     bool m_firstPage;
 };
 
+class ExportProcessor{
+public:
+    explicit ExportProcessor(QImage* image, int resolution);
+    ~ExportProcessor(){}
+    bool printPage(LimeReport::PageItemDesignIntf::Ptr page);
+
+private:
+    QImage*   m_image;
+    LimeReport::PageDesignIntf m_renderPage;
+    bool m_firstPage;
+    bool m_landscape;
+    int m_resolution;
+    QMargins m_margins;
+};
+
 class ReportEnginePrivate : public QObject,
         public ICollectionContainer,
         public ITranslationContainer,
@@ -150,7 +165,9 @@ class ReportEnginePrivate : public QObject,
 public:
     bool printPages(ReportPages pages, QPrinter *printer);
     void printPages(ReportPages pages, QMap<QString,QPrinter*>printers, bool printToAllPrinters = false);
-    Q_INVOKABLE QStringList aviableReportTranslations();
+    bool exportPagesToImage(ReportPages pages, QImage *image, int resolution);
+
+    Q_INVOKABLE QStringList availableReportTranslations();
     Q_INVOKABLE void setReportTranslation(const QString& languageName);
 public:
     explicit ReportEnginePrivate(QObject *parent = 0);
@@ -172,6 +189,7 @@ public:
     }
 
     void    clearReport();
+    bool    exportReportToImage(QImage *image, int resolution);
     bool    printReport(QPrinter* printer=0);
     bool    printReport(QMap<QString, QPrinter*>printers, bool printToAllPrinters);
 
@@ -204,6 +222,7 @@ public:
     void emitSaveFinished();
     void emitLoadFinished();
     void emitPrintedToPDF(QString fileName);
+    void emitExportedToImage();
     bool isSaved();
     void setCurrentReportsDir(const QString& dirName);
     QString currentReportsDir(){ return m_reportsDir;}
@@ -270,6 +289,7 @@ signals:
     void    saveFinished();
     void    loadFinished();
     void    printedToPDF(QString fileName);
+    void    exportedToImage();
 
     void    getAvailableDesignerLanguages(QList<QLocale::Language>* languages);
     void    currentDefaultDesignerLanguageChanged(QLocale::Language);

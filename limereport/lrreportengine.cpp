@@ -302,9 +302,40 @@ bool ReportEnginePrivate::printPages(ReportPages pages, QPrinter *printer)
     } else return false;
 }
 
+bool ReportEnginePrivate::exportPagesToImage(ReportPages pages, QImage *image, int resolution)
+{
+    int currentPage = 1;
+    m_cancelPrinting = false;
+
+    ExportProcessor *exporter = new ExportProcessor(image, resolution);
+    int pageCount = pages.size();
+
+    bool ret = true;
+    emit printingStarted(pageCount);
+    try {
+        foreach(PageItemDesignIntf::Ptr page, pages){
+            if ( !m_cancelPrinting )
+            {
+                  exporter->printPage(page);
+                  emit pagePrintingFinished(currentPage);
+                  QApplication::processEvents();
+            }
+
+            currentPage++;
+        }
+    } catch(ReportError &exception) {
+        saveError(exception.what());
+        ret = false;
+    }
+    emit printingFinished();
+
+    return ret;
+}
+
+
 void ReportEnginePrivate::internalPrintPages(ReportPages pages, QPrinter &printer)
 {
-    int currenPage = 1;
+    int currentPage = 1;
     m_cancelPrinting = false;
     QMap<QString, QSharedPointer<PrintProcessor> > printProcessors;
     printProcessors.insert("default",QSharedPointer<PrintProcessor>(new PrintProcessor(&printer)));
@@ -318,17 +349,17 @@ void ReportEnginePrivate::internalPrintPages(ReportPages pages, QPrinter &printe
         if (    !m_cancelPrinting &&
                 ((printer.printRange() == QPrinter::AllPages) ||
                 (   (printer.printRange()==QPrinter::PageRange) &&
-                    (currenPage >= printer.fromPage()) &&
-                    (currenPage <= printer.toPage())
+                    (currentPage >= printer.fromPage()) &&
+                    (currentPage <= printer.toPage())
                 ))
            )
         {
               printProcessors["default"]->printPage(page);
-              emit pagePrintingFinished(currenPage);
+              emit pagePrintingFinished(currentPage);
               QApplication::processEvents();
         }
 
-        currenPage++;
+        currentPage++;
     }
     emit printingFinished();
 }
@@ -370,7 +401,7 @@ void ReportEnginePrivate::printPages(ReportPages pages, QMap<QString, QPrinter*>
     emit printingFinished();
 }
 
-QStringList ReportEnginePrivate::aviableReportTranslations()
+QStringList ReportEnginePrivate::availableReportTranslations()
 {
     QStringList result;
     foreach (QLocale::Language language, aviableLanguages()){
@@ -386,6 +417,23 @@ void ReportEnginePrivate::setReportTranslation(const QString &languageName)
            setReportLanguage(language);
        }
     }
+}
+
+bool ReportEnginePrivate::exportReportToImage(QImage *image, int resolution)
+{
+    bool ret = true;
+    try{
+        bool designTime = dataManager()->designTime();
+        dataManager()->setDesignTime(false);
+        ReportPages pages = renderToPages();
+        dataManager()->setDesignTime(designTime);
+
+        ret = exportPagesToImage(pages, image, resolution);
+    } catch(ReportError &exception){
+        saveError(exception.what());
+        ret = false;
+    }
+    return ret;
 }
 
 bool ReportEnginePrivate::printReport(QPrinter* printer)
@@ -641,6 +689,11 @@ void ReportEnginePrivate::emitLoadFinished()
 void ReportEnginePrivate::emitPrintedToPDF(QString fileName)
 {
     emit printedToPDF(fileName);
+}
+
+void ReportEnginePrivate::emitExportedToImage()
+{
+    emit exportedToImage();
 }
 
 bool ReportEnginePrivate::isSaved()
@@ -1444,6 +1497,12 @@ bool ReportEngine::printReport(QPrinter *printer)
     return d->printReport(printer);
 }
 
+bool ReportEngine::exportReportToImage(QImage *image, int resolution)
+{
+    Q_D(ReportEngine);
+    return d->exportReportToImage(image, resolution);
+}
+
 bool ReportEngine::printReport(QMap<QString, QPrinter*> printers, bool printToAllPrinters)
 {
     Q_D(ReportEngine);
@@ -2002,6 +2061,60 @@ void PrintProcessor::initPrinter(PageItemDesignIntf* page)
         }
     }
 #endif
+}
+
+ExportProcessor::ExportProcessor(QImage* image, int resolution)
+    : m_image(image),
+      m_firstPage(true),
+      m_landscape(false),
+      m_resolution(resolution)
+{
+    m_renderPage.setItemMode(PrintMode);
+}
+
+bool ExportProcessor::printPage(PageItemDesignIntf::Ptr page)
+{
+    PageDesignIntf* backupPage = dynamic_cast<PageDesignIntf*>(page->scene());
+
+    QPointF backupPagePos = page->pos();
+    page->setPos(0,0);
+    m_renderPage.setPageItem(page);
+    m_renderPage.setSceneRect(m_renderPage.pageItem()->mapToScene(m_renderPage.pageItem()->rect()).boundingRect());
+
+    if( (QPageLayout::Orientation)page->pageOrientation() == QPageLayout::Landscape )
+        m_landscape = true;
+
+    QPoint offset(0,0);
+    QRectF source = page->geometry();
+    QSizeF inchSize = source.size() / (100 * 2.54);
+    QSizeF scaledSize = inchSize * m_resolution;
+
+    if (!m_firstPage) {
+        offset.setY(m_image->height());
+        int newHeight = m_image->height() + scaledSize.height();
+        *m_image = m_image->copy(0, 0, m_image->width(), newHeight);
+    } else {
+        m_firstPage = false;
+        *m_image = QImage(scaledSize.toSize(), QImage::Format_ARGB32);
+    }
+
+    QPainter *painter = new QPainter(m_image);
+    if (!painter->isActive())
+    {
+        qDebug() << "ExportProcessor::printPage: Painter is not active! Kick Daniel's chair.";
+        delete painter;
+        return false;
+    }
+
+    QRectF target = QRectF(offset, scaledSize);
+    m_renderPage.render(painter, target, source);
+
+    page->setPos(backupPagePos);
+    m_renderPage.removePageItem(page);
+    if (backupPage) backupPage->reactivatePageItem(page);
+
+    delete painter;
+    return true;
 }
 
 qreal ItemGeometry::x() const

@@ -212,6 +212,8 @@ public:
     bool mixWithPriorPage() const;
     void setMixWithPriorPage(bool value);
 
+    QRectF& pageRect(){return m_pageRect;}
+
 signals:
     void beforeFirstPageRendered();
     void afterLastPageRendered();
@@ -222,7 +224,6 @@ protected slots:
     void setUnitTypeProperty(BaseDesignIntf::UnitType value);
 protected:
     void    collectionLoadFinished(const QString& collectionName);
-    QRectF& pageRect(){return m_pageRect;}
     void    updateMarginRect();
     QSizeF  getRectByPageSize(const PageSize &size);
     void    initPageSize(const PageSize &size);
